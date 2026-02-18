@@ -1,0 +1,46 @@
+devices:
+  samplerate: 44100
+  # Smaller chunksize = lower latency but higher CPU usage
+  # Use this for low-latency setups with good hardware
+  chunksize: 512
+  # Enable extra buffering for stability
+  queuelimit: 4
+  capture:
+    type: Pulse
+    device: "camilla_sink.monitor"
+    channels: 2
+    format: S16LE
+  playback:
+    type: Alsa
+    device: "hw:1,0"
+    channels: 2
+    format: S16LE
+
+pipeline:
+  - type: Filter
+    channels: [0]
+    names: [eq31, eq63, eq125, eq250, eq500, eq1k, eq2k, eq4k, eq8k, eq16k]
+  - type: Filter
+    channels: [1]
+    names: [eq31, eq63, eq125, eq250, eq500, eq1k, eq2k, eq4k, eq8k, eq16k]
+  - type: Filter
+    channels: [0, 1]
+    names: [limiter]
+
+filters:
+  eq31:  {type: Biquad, parameters: {type: Peaking, freq: 31,   gain: -2, q: 0.7}}
+  eq63:  {type: Biquad, parameters: {type: Peaking, freq: 63,   gain: -3, q: 0.7}}
+  eq125: {type: Biquad, parameters: {type: Peaking, freq: 125,  gain: -3, q: 0.7}}
+  eq250: {type: Biquad, parameters: {type: Peaking, freq: 250,  gain: -1, q: 0.7}}
+  eq500: {type: Biquad, parameters: {type: Peaking, freq: 500,  gain: -1, q: 0.7}}
+  eq1k:  {type: Biquad, parameters: {type: Peaking, freq: 1000, gain: 0,  q: 0.7}}
+  eq2k:  {type: Biquad, parameters: {type: Peaking, freq: 2000, gain: 3,  q: 0.7}}
+  eq4k:  {type: Biquad, parameters: {type: Peaking, freq: 4000, gain: 2,  q: 0.7}}
+  eq8k:  {type: Biquad, parameters: {type: Peaking, freq: 8000, gain: 0,  q: 0.7}}
+  eq16k: {type: Biquad, parameters: {type: Peaking, freq: 16000, gain: -1, q: 0.7}}
+
+  limiter:
+    type: Limiter
+    parameters:
+      soft_clip: true
+      clip_limit: -3

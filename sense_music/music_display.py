@@ -161,6 +161,7 @@ class ThreadSafeState:
         self._agc_gain = 1.0
         self._stream_active = False
         self._last_error: Optional[str] = None
+        self._silence_detected = False
 
     @property
     def levels_smooth(self) -> np.ndarray:
@@ -221,6 +222,16 @@ class ThreadSafeState:
     def last_error(self, value: Optional[str]):
         with self._lock:
             self._last_error = value
+
+    @property
+    def silence_detected(self) -> bool:
+        with self._lock:
+            return self._silence_detected
+
+    @silence_detected.setter
+    def silence_detected(self, value: bool):
+        with self._lock:
+            self._silence_detected = value
 
 
 # Global state instance
@@ -459,9 +470,13 @@ def audio_callback(
     current_levels = STATE.levels_smooth
     STATE.levels_smooth = (CONFIG.smoothing * current_levels) + ((1.0 - CONFIG.smoothing) * levels)
 
-    # Update activity timestamp
-    if float(np.mean(levels)) > 0.01:
+    # Update activity timestamp and silence detection
+    current_mean = float(np.mean(levels))
+    if current_mean > 0.01:
         STATE.audio_last_active = time.time()
+        STATE.silence_detected = False
+    elif current_mean < 0.001:
+        STATE.silence_detected = True
 
 
 def pick_audio_device() -> Optional[int]:

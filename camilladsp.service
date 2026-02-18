@@ -8,6 +8,8 @@ Type=simple
 # Release USB Audio from PulseAudio before starting CamillaDSP
 ExecStartPre=/home/%u/Audio_Player/release-usb-audio.sh
 ExecStart=/usr/local/bin/camilladsp /home/%u/Audio_Player/sense_music/camilla.yml
+# Play startup sound after CamillaDSP is ready
+ExecStartPost=/bin/sh -c 'sleep 2 && /home/%u/Audio_Player/play-startup-sound.sh'
 Restart=always
 RestartSec=5
 

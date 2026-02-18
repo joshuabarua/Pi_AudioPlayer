@@ -1,0 +1,13 @@
+[Unit]
+Description=Bluetooth Connection Sound Monitor
+After=bluetooth.service pulseaudio.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+ExecStart=/home/%u/Audio_Player/bluetooth-monitor-simple.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

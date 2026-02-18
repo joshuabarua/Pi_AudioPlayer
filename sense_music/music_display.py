@@ -849,6 +849,18 @@ class MusicDisplayApp:
         self.display = DisplayController()
         self.running = False
 
+    def _play_connection_sound(self) -> None:
+        """Play a subtle sound when a device connects."""
+        try:
+            import subprocess
+            subprocess.Popen(
+                ['/home/josh/Audio_Player/play-connection-sound.sh'],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except Exception:
+            pass
+
     def start(self) -> None:
         """Start the application."""
         LOGGER.info("Starting Music Display + Visualizer")
@@ -887,6 +899,11 @@ class MusicDisplayApp:
 
                         if current_track != last_shown_track:
                             LOGGER.info(f"Track: {current_track}")
+                            
+                            # Play connection sound on first track or device change
+                            if last_shown_track is None or last_shown_track == "__no_audio__":
+                                self._play_connection_sound()
+                            
                             prev_vol = get_current_volume()
                             set_sink_volume(5)
 

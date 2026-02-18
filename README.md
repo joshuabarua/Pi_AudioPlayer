@@ -161,6 +161,17 @@ sudo loginctl disable-linger $USER
 - `camilladsp.service` - Runs CamillaDSP audio processor (needs USB Audio CODEC)
 - `sense-music.service` - Runs the Sense HAT display and visualizer
 
+**Optional Bluetooth monitor:**
+```bash
+# Install bluetooth monitor for connection sounds
+./install-services.sh
+# Also copy the bluetooth monitor service:
+cp bluetooth-monitor.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable bluetooth-monitor.service
+systemctl --user start bluetooth-monitor.service
+```
+
 ### Audio Visualizer Only
 
 If you just want the FFT visualizer without metadata:
@@ -168,6 +179,21 @@ If you just want the FFT visualizer without metadata:
 ```bash
 ./venv/bin/python sense_music/audio_visualizer.py
 ```
+
+## Audio Feedback Sounds
+
+The system provides subtle audio feedback:
+
+### Startup Sound
+When CamillaDSP starts, you'll hear a pleasant two-tone chime indicating the audio system is ready.
+
+### Connection Sound
+When a device connects via AirPlay or Bluetooth, you'll hear a subtle ascending two-tone sound to confirm the connection.
+
+**To customize the sounds:**
+- Place your own `startup.wav` in the `sounds/` directory
+- Or edit `play-startup-sound.sh` and `play-connection-sound.sh` to change the tones
+- Adjust volume in the scripts (default is 25-30% for subtle feedback)
 
 ## Configuration
 
@@ -242,21 +268,27 @@ sudo systemctl restart shairport-sync
 
 ```
 .
-├── start.sh                    # Master startup script
-├── setup.sh                    # One-time setup script
-├── play_chime.sh               # Test audio playback script
-├── install-services.sh         # Install systemd services
-├── uninstall-services.sh       # Remove systemd services
-├── release-usb-audio.sh        # Release USB Audio from PulseAudio
-├── requirements.txt            # Python dependencies
-├── camilladsp.service          # Systemd service for CamillaDSP
-├── sense-music.service         # Systemd service for display
+├── start.sh                      # Master startup script
+├── setup.sh                      # One-time setup script
+├── play_chime.sh                 # Test audio playback script
+├── play-startup-sound.sh         # Startup chime
+├── play-connection-sound.sh      # Device connection chime
+├── bluetooth-monitor.sh          # Bluetooth connection monitor
+├── bluetooth-monitor-simple.sh   # Simple Bluetooth monitor (dbus)
+├── install-services.sh           # Install systemd services
+├── uninstall-services.sh         # Remove systemd services
+├── release-usb-audio.sh          # Release USB Audio from PulseAudio
+├── requirements.txt              # Python dependencies
+├── camilladsp.service            # Systemd service for CamillaDSP
+├── sense-music.service           # Systemd service for display
+├── bluetooth-monitor.service     # Bluetooth monitor service
 ├── sense_music/
-│   ├── camilla.yml            # CamillaDSP configuration
-│   ├── music_display.py       # Main display + visualizer app
-│   └── audio_visualizer.py    # Standalone visualizer
-├── camilladsp/                # CamillaDSP source (submodule)
-└── venv/                      # Python virtual environment
+│   ├── camilla.yml              # CamillaDSP configuration
+│   ├── music_display.py         # Main display + visualizer app
+│   └── audio_visualizer.py      # Standalone visualizer
+├── sounds/                       # Custom sound files (optional)
+├── camilladsp/                   # CamillaDSP source (submodule)
+└── venv/                         # Python virtual environment
 ```
 
 ## License

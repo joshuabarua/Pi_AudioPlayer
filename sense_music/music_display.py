@@ -394,7 +394,7 @@ def compute_levels(block: np.ndarray) -> np.ndarray:
 
     length = len(mag)
     if length <= 0:
-        return np.zeros(CONFIG.n_bANDS, dtype=np.float32)
+        return np.zeros(CONFIG.n_bands, dtype=np.float32)
 
     # Compute band averages
     band_size = max(1, length // CONFIG.n_bands)

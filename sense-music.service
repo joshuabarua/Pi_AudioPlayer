@@ -1,0 +1,15 @@
+[Unit]
+Description=Sense HAT Music Display
+After=camilladsp.service pulseaudio.service
+Wants=camilladsp.service
+
+[Service]
+Type=simple
+Environment="PYTHONUNBUFFERED=1"
+WorkingDirectory=/home/%u/Audio_Player
+ExecStart=/home/%u/Audio_Player/venv/bin/python /home/%u/Audio_Player/sense_music/music_display.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

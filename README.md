@@ -235,6 +235,53 @@ sudo apt install shairport-sync
 sudo systemctl restart shairport-sync
 ```
 
+## Performance & Optimization
+
+### Health Check
+Quick diagnostic of the entire system:
+```bash
+./health-check.sh
+```
+
+### Performance Monitoring
+Real-time CPU, temperature, and memory monitoring:
+```bash
+./monitor-performance.sh
+```
+
+### System Optimization (Run once with sudo)
+Optimizes Raspberry Pi for audio processing:
+```bash
+sudo ./optimize-audio.sh
+```
+This sets:
+- CPU governor to performance mode
+- Disables screen blanking
+- Optimizes kernel buffers
+- Sets real-time audio priorities
+- Configures USB audio for low latency
+
+### Low Latency Mode
+For lower audio latency (higher CPU usage), use the alternative config:
+```bash
+# Edit the service to use low-latency config
+systemctl --user stop camilladsp.service
+# Change config in ~/.config/systemd/user/camilladsp.service
+# from: camilla.yml to: camilla-lowlatency.yml
+systemctl --user daemon-reload
+systemctl --user start camilladsp.service
+```
+
+### Bluetooth Connection Sounds
+The Bluetooth monitor is now installed and will play a subtle sound when devices connect:
+```bash
+# Check if it's running
+systemctl --user status bluetooth-monitor.service
+
+# View Bluetooth connection logs
+journalctl --user -u bluetooth-monitor.service -f
+```
+
 ## Troubleshooting
 
 ### No Audio Output

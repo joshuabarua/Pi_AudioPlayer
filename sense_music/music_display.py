@@ -60,13 +60,18 @@ class Config:
     track_repeat_interval: float = 30.0
     no_audio_timeout: float = 10.0
 
-    # AGC (Automatic Gain Control)
-    agc_target_rms: float = 0.02
-    agc_max_gain: float = 4.0
-    agc_min_gain: float = 0.25
-    agc_attack: float = 0.1
-    agc_release: float = 0.01
-    limit_threshold: float = 0.25
+     # AGC (Automatic Gain Control)
+     agc_target_rms: float = 0.02
+     agc_max_gain: float = 4.0
+     agc_min_gain: float = 0.25
+     agc_attack: float = 0.1
+     agc_release: float = 0.01
+     limit_threshold: float = 0.25
+
+     # Volume Ducking (lower playback volume for notifications)
+     duck_enabled: bool = True
+     duck_level: float = 0.3  # 30% volume during ducking
+     duck_duration: float = 2.0  # seconds to stay ducked
 
     # Brightness (time-of-day)
     day_brightness: float = 0.10
@@ -162,6 +167,8 @@ class ThreadSafeState:
         self._stream_active = False
         self._last_error: Optional[str] = None
         self._silence_detected = False
+        self._saved_volume: Optional[int] = None
+        self._ducked_until: float = 0.0
 
     @property
     def levels_smooth(self) -> np.ndarray:
@@ -218,20 +225,20 @@ class ThreadSafeState:
         with self._lock:
             return self._last_error
 
-    @last_error.setter
-    def last_error(self, value: Optional[str]):
-        with self._lock:
-            self._last_error = value
+     @last_error.setter
+     def last_error(self, value: Optional[str]):
+         with self._lock:
+             self._last_error = value
 
-    @property
-    def silence_detected(self) -> bool:
-        with self._lock:
-            return self._silence_detected
+     @property
+     def ducked_until(self) -> float:
+         with self._lock:
+             return getattr(self, '_ducked_until', 0.0)
 
-    @silence_detected.setter
-    def silence_detected(self, value: bool):
-        with self._lock:
-            self._silence_detected = value
+     @ducked_until.setter
+     def ducked_until(self, value: float):
+         with self._lock:
+             self._ducked_until = value
 
 
 # Global state instance

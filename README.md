@@ -282,6 +282,46 @@ systemctl --user status bluetooth-monitor.service
 journalctl --user -u bluetooth-monitor.service -f
 ```
 
+### Daily Health Monitoring with Telegram
+
+Set up automated daily health checks that send Telegram notifications with system status:
+
+```bash
+# Run the setup wizard
+./setup-telegram-health-check.sh
+```
+
+This will:
+1. Guide you through creating a Telegram bot (@BotFather)
+2. Configure your bot token and chat ID
+3. Set up daily automated checks (cron or systemd timer)
+4. Test the connection
+
+**Features:**
+- Runs daily diagnostics automatically
+- Sends summary with system status, CPU temp, disk/memory usage
+- Alerts if CamillaDSP, Music Display, or Shairport Sync are down
+- Attaches full diagnostic log
+
+**Manual run:**
+```bash
+# Load config and run
+source ~/.config/audio-health-check.conf
+./daily-health-check.sh
+
+# Or pass credentials directly
+./daily-health-check.sh YOUR_BOT_TOKEN YOUR_CHAT_ID
+```
+
+**Check status:**
+```bash
+# If using systemd timer
+systemctl --user status audio-health-check.timer
+
+# If using cron
+crontab -l | grep health-check
+```
+
 ## Troubleshooting
 
 ### No Audio Output
@@ -325,6 +365,11 @@ journalctl --user -u bluetooth-monitor.service -f
 ├── install-services.sh           # Install systemd services
 ├── uninstall-services.sh         # Remove systemd services
 ├── release-usb-audio.sh          # Release USB Audio from PulseAudio
+├── fix-shairport-latency.sh      # Fix AirPlay latency issues
+├── diagnose-latency.sh           # Diagnostic tool for buffer chain
+├── daily-health-check.sh         # Daily health check with Telegram
+├── setup-telegram-health-check.sh # Setup daily monitoring
+├── verify-optimizations.sh       # Verify system optimizations
 ├── requirements.txt              # Python dependencies
 ├── camilladsp.service            # Systemd service for CamillaDSP
 ├── sense-music.service           # Systemd service for display

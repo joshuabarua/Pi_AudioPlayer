@@ -47,31 +47,31 @@ class Config:
     # Audio settings
     pa_device_name: str = "camilla_sink.monitor"
     sample_rate: int = 44100
-    block_size: int = 1024
+    block_size: int = 2048
     n_bands: int = 8
     smoothing: float = 0.3
 
     # Visualizer settings
     scroll_speed: float = 0.02
-    check_interval: float = 0.05
+    check_interval: float = 0.12
 
     # Timeouts
     metadata_timeout: float = 20.0
     track_repeat_interval: float = 30.0
     no_audio_timeout: float = 10.0
 
-     # AGC (Automatic Gain Control)
-     agc_target_rms: float = 0.02
-     agc_max_gain: float = 4.0
-     agc_min_gain: float = 0.25
-     agc_attack: float = 0.1
-     agc_release: float = 0.01
-     limit_threshold: float = 0.25
+    # AGC (Automatic Gain Control)
+    agc_target_rms: float = 0.02
+    agc_max_gain: float = 4.0
+    agc_min_gain: float = 0.25
+    agc_attack: float = 0.1
+    agc_release: float = 0.01
+    limit_threshold: float = 0.25
 
-     # Volume Ducking (lower playback volume for notifications)
-     duck_enabled: bool = True
-     duck_level: float = 0.3  # 30% volume during ducking
-     duck_duration: float = 2.0  # seconds to stay ducked
+    # Volume Ducking (lower playback volume for notifications)
+    duck_enabled: bool = True
+    duck_level: float = 0.3  # 30% volume during ducking
+    duck_duration: float = 2.0  # seconds to stay ducked
 
     # Brightness (time-of-day)
     day_brightness: float = 0.10
@@ -225,20 +225,20 @@ class ThreadSafeState:
         with self._lock:
             return self._last_error
 
-     @last_error.setter
-     def last_error(self, value: Optional[str]):
-         with self._lock:
-             self._last_error = value
+    @last_error.setter
+    def last_error(self, value: Optional[str]):
+        with self._lock:
+            self._last_error = value
 
-     @property
-     def ducked_until(self) -> float:
-         with self._lock:
-             return getattr(self, '_ducked_until', 0.0)
+    @property
+    def ducked_until(self) -> float:
+        with self._lock:
+            return getattr(self, '_ducked_until', 0.0)
 
-     @ducked_until.setter
-     def ducked_until(self, value: float):
-         with self._lock:
-             self._ducked_until = value
+    @ducked_until.setter
+    def ducked_until(self, value: float):
+        with self._lock:
+            self._ducked_until = value
 
 
 # Global state instance
@@ -763,12 +763,8 @@ def scroll_text(display: DisplayController, text: str, base_color: Tuple[int, in
 
 def show_airplay_icon(display: DisplayController) -> None:
     """Show AirPlay/Spotify icon temporarily."""
-    prev_vol = get_current_volume()
-    set_sink_volume(5)  # Quiet
-
     display.clear()
     factor = get_brightness_factor()
-    base_color = CONFIG.airplay_blue  # Use default or detect
 
     bg = apply_brightness((255, 255, 255), factor)
     blue = apply_brightness((0, 0, 255), factor)
@@ -790,14 +786,14 @@ def show_airplay_icon(display: DisplayController) -> None:
 
     display.set_pixels(pixels)
     time.sleep(1.5)
-    set_sink_volume(prev_vol)  # Restore
 
 
 def show_no_audio_x(display: DisplayController) -> None:
     """Show 'no audio' indicator."""
-    display.clear()
     factor = get_brightness_factor()
     r, g, b = apply_brightness(CONFIG.error_red, factor)
+    off = (0, 0, 0)
+    pixels = [off] * 64
 
     coords = [
         (0, 0), (1, 1), (2, 2), (3, 3),
@@ -807,7 +803,9 @@ def show_no_audio_x(display: DisplayController) -> None:
     ]
 
     for x, y in coords:
-        display.set_pixel(x, y, r, g, b)
+        pixels[y * 8 + x] = (r, g, b)
+
+    display.set_pixels(pixels)
 
 
 def ambient_step(display: DisplayController) -> None:
@@ -818,7 +816,8 @@ def ambient_step(display: DisplayController) -> None:
     brightness = factor * pulse
     brightness = max(0.0, min(1.0, brightness))
 
-    display.clear()
+    off = (0, 0, 0)
+    pixels = [off] * 64
 
     current_index = STATE.ambient_index
     for i in range(TAIL_LENGTH):
@@ -828,7 +827,9 @@ def ambient_step(display: DisplayController) -> None:
         total = brightness * tail_factor
         r, g, b = apply_brightness(CONFIG.spinner_color, total)
         if r or g or b:
-            display.set_pixel(x, y, r, g, b)
+            pixels[y * 8 + x] = (r, g, b)
+
+    display.set_pixels(pixels)
 
     STATE.ambient_index = (current_index + 4) % len(SPINNER_PATH)
 
@@ -836,7 +837,8 @@ def ambient_step(display: DisplayController) -> None:
 def draw_levels(display: DisplayController) -> None:
     """Draw audio frequency levels on the LED matrix."""
     brightness = get_brightness_factor()
-    display.clear()
+    off = (0, 0, 0)
+    pixels = [off] * 64
 
     lv = STATE.levels_smooth
     for x in range(CONFIG.n_bands):
@@ -854,7 +856,9 @@ def draw_levels(display: DisplayController) -> None:
                 base_color = CONFIG.red
 
             r, g, b = apply_brightness(base_color, brightness)
-            display.set_pixel(x, y, r, g, b)
+            pixels[y * 8 + x] = (r, g, b)
+
+    display.set_pixels(pixels)
 
 
 # =============================================================================
@@ -870,6 +874,7 @@ class MusicDisplayApp:
         self.stream: Optional[sd.InputStream] = None
         self.display = DisplayController()
         self.running = False
+        self.last_connection_sound_time = 0.0
 
     def _play_connection_sound(self) -> None:
         """Play a subtle sound when a device connects."""
@@ -914,26 +919,28 @@ class MusicDisplayApp:
                     artist, title, updated_at = self.reader.get_track()
                     now = time.time()
                     audio_recent = (now - STATE.audio_last_active) < 1.5
+                    metadata_fresh = updated_at > 0 and (now - updated_at) <= CONFIG.metadata_timeout
 
                     # Track display logic
-                    if artist or title:
+                    if audio_recent and metadata_fresh and (artist or title):
                         current_track = f"{artist} - {title}"
 
-                        if current_track != last_shown_track:
+                        if current_track != last_shown_track or no_audio_shown:
                             LOGGER.info(f"Track: {current_track}")
-                            
-                            # Play connection sound on first track or device change
-                            if last_shown_track is None or last_shown_track == "__no_audio__":
+
+                            # Play connection sound only when coming back from idle
+                            should_play_connection_sound = (
+                                (last_shown_track is None or no_audio_shown)
+                                and (now - self.last_connection_sound_time) > 5.0
+                            )
+                            if should_play_connection_sound:
                                 self._play_connection_sound()
-                            
-                            prev_vol = get_current_volume()
-                            set_sink_volume(5)
+                                self.last_connection_sound_time = now
 
                             show_airplay_icon(self.display)
                             base_color = CONFIG.get_app_color(detect_current_app())
                             scroll_text(self.display, current_track, base_color)
 
-                            set_sink_volume(prev_vol)
                             last_shown_track = current_track
                             last_track_display_time = time.time()
                             no_audio_shown = False
@@ -944,7 +951,6 @@ class MusicDisplayApp:
                             show_no_audio_x(self.display)
                             time.sleep(0.7)
                             no_audio_shown = True
-                            last_shown_track = "__no_audio__"
                             LOGGER.info("No audio (idle)")
 
                     # Draw visualizer or ambient

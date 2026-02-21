@@ -1,12 +1,9 @@
 #!/bin/bash
-# Play connection sound when a device connects (AirPlay/Bluetooth)
-# Called by device connection hooks
+# Play a softer connection sound when a device connects.
 
-VOLUME="0.25"  # 25% volume - very subtle
+VOLUME="0.03"
+PULSE_VOLUME="3500"
 
-# Simple pleasant connection sound - ascending two tones
-(
-    sox -n -t wav - synth 0.1 sine 880 vol $VOLUME | paplay --device=camilla_sink --volume=22000 2>/dev/null
-    sleep 0.1
-    sox -n -t wav - synth 0.2 sine 1100 vol $VOLUME fade h 0.05 0.2 0.1 | paplay --device=camilla_sink --volume=22000 2>/dev/null
-) &
+sox -n -t wav - synth 0.06 sine 440 vol "$VOLUME" fade q 0.01 0.06 0.04 | paplay --device=camilla_sink --volume="$PULSE_VOLUME" 2>/dev/null
+sleep 0.04
+sox -n -t wav - synth 0.08 sine 554.37 vol "$VOLUME" fade q 0.01 0.08 0.05 | paplay --device=camilla_sink --volume="$PULSE_VOLUME" 2>/dev/null

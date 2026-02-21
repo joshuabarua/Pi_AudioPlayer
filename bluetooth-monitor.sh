@@ -4,6 +4,20 @@
 
 CONNECTION_SOUND="/home/josh/Audio_Player/play-connection-sound.sh"
 LAST_DEVICE=""
+LAST_TRIGGER_TS=0
+COOLDOWN_SECONDS=5
+
+trigger_connection_sound() {
+    local now
+    now=$(date +%s)
+    if (( now - LAST_TRIGGER_TS < COOLDOWN_SECONDS )); then
+        return
+    fi
+
+    LAST_TRIGGER_TS=$now
+    sleep 0.5
+    "$CONNECTION_SOUND" >/dev/null 2>&1 &
+}
 
 echo "Monitoring Bluetooth connections..."
 
@@ -12,9 +26,7 @@ bluetoothctl | while read -r line; do
     # Check for connection events
     if echo "$line" | grep -q "Connection successful"; then
         echo "Bluetooth device connected!"
-        # Small delay to ensure audio system is ready
-        sleep 0.5
-        "$CONNECTION_SOUND" &
+        trigger_connection_sound
     fi
     
     # Alternative: check for device property changes
@@ -23,8 +35,7 @@ bluetoothctl | while read -r line; do
         if [[ "$DEVICE" != "$LAST_DEVICE" ]]; then
             echo "Device $DEVICE connected"
             LAST_DEVICE="$DEVICE"
-            sleep 0.5
-            "$CONNECTION_SOUND" &
+            trigger_connection_sound
         fi
     fi
 done

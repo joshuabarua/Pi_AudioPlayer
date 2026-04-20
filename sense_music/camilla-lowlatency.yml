@@ -1,8 +1,7 @@
 devices:
   samplerate: 44100
-  # Smaller chunksize = lower latency but higher CPU usage
-  # Use this for low-latency setups with good hardware
-  chunksize: 512
+  # Balanced chunksize for lower latency with more headroom
+  chunksize: 1024
   # Enable extra buffering for stability
   queuelimit: 4
   capture:

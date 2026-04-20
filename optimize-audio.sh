@@ -50,9 +50,11 @@ echo "✓ Kernel tuned"
 echo "[4/10] Disabling conflicting services..."
 UNNEEDED_SERVICES=(
     "triggerhappy.service"
-    "bluetooth.service"  # Only if you don't use Bluetooth audio
     "avahi-daemon.service"  # Optional: if you don't need mDNS
 )
+if [[ "${DISABLE_BLUETOOTH:-0}" == "1" ]]; then
+    UNNEEDED_SERVICES+=("bluetooth.service")
+fi
 for svc in "${UNNEEDED_SERVICES[@]}"; do
     if systemctl is-active --quiet "$svc" 2>/dev/null; then
         systemctl disable "$svc" 2>/dev/null || true
@@ -152,4 +154,3 @@ echo "  sudo sysctl -p"
 echo "  sudo usermod -a -G audio $USER"
 echo ""
 echo "Note: Current user ($SUDO_USER) may need to log out/in for group changes."
-

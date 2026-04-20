@@ -20,7 +20,7 @@ general =
     name = "Jukebox";
     volume_range_db = 60;
     output_backend = "pa";
-    latency = 11025;  # ~0.25s for video sync (was 44100 = 1s)
+    latency = 4410;  # ~0.10s for tighter video sync
     drift_tolerance_in_seconds = 0.005;
     resync_threshold_in_seconds = 0.030;
 };
@@ -37,7 +37,7 @@ pa =
 {
     application_name = "Shairport Sync";
     sink = "camilla_sink";
-    audio_backend_buffer_desired_length_in_seconds = 0.05;  # Lower buffer (was 0.15)
+    audio_backend_buffer_desired_length_in_seconds = 0.02;  # Lower buffer for tighter sync
     audio_backend_latency_offset_in_seconds = 0.0;
 };
 
@@ -106,7 +106,7 @@ echo ""
 echo "Key changes made:"
 echo "  - Shairport latency: 44100 → 11025 samples (~0.25s)"
 echo "  - PulseAudio buffer: 0.15s → 0.05s"
-echo "  - CamillaDSP: Using camilla-lowlatency.yml (chunksize 512)"
+echo "  - CamillaDSP: Using camilla-lowlatency.yml (chunksize 1024)"
 echo "  - PulseAudio fragments: 2 x 4ms"
 echo ""
 echo "If you still experience issues:"

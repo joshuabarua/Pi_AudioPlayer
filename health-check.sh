@@ -31,6 +31,13 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
+# Check if Bluetooth service is running
+if systemctl is-active --quiet bluetooth.service; then
+    echo "✓ Bluetooth service is running"
+else
+    echo "⚠ Bluetooth service is NOT running"
+fi
+
 # Check if USB Audio CODEC is accessible
 USB_CARD=$(aplay -l | grep "USB Audio CODEC" | head -1 | awk '{print $2}' | tr -d ':')
 if [[ -n "$USB_CARD" ]]; then

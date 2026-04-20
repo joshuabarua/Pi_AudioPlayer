@@ -20,7 +20,7 @@ general =
     name = "Jukebox";
     volume_range_db = 60;
     output_backend = "pa";
-    latency = 11025;
+    latency = 4410;
     drift_tolerance_in_seconds = 0.005;
     resync_threshold_in_seconds = 0.030;
     mdns_backend = "avahi";
@@ -39,7 +39,7 @@ pa =
 {
     application_name = "Shairport Sync";
     sink = "camilla_sink";
-    audio_backend_buffer_desired_length_in_seconds = 0.05;
+    audio_backend_buffer_desired_length_in_seconds = 0.02;
     audio_backend_latency_offset_in_seconds = 0.0;
 };
 

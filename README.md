@@ -57,7 +57,7 @@ The system is configured to use a USB Audio CODEC (Burr-Brown PCM2902) for direc
 # Verify USB Audio CODEC is detected
 aplay -l | grep "USB Audio CODEC"
 
-# The CamillaDSP config (sense_music/camilla.yml) is already set to use:
+# The CamillaDSP config (sense_music/camilla-lowlatency.yml) is already set to use:
 #   device: "hw:1,0" (USB Audio CODEC)
 
 # Release USB Audio from PulseAudio (run this before starting CamillaDSP)
@@ -95,7 +95,7 @@ pip install -r requirements.txt
 
 # Or start components individually:
 # Terminal 1: Start CamillaDSP
-camilladsp sense_music/camilla.yml
+camilladsp sense_music/camilla-lowlatency.yml
 
 # Terminal 2: Start music display
 ./venv/bin/python sense_music/music_display.py -v
@@ -191,7 +191,7 @@ When CamillaDSP starts, you'll hear a pleasant two-tone chime indicating the aud
 When a device connects via AirPlay or Bluetooth, you'll hear a subtle ascending two-tone sound to confirm the connection.
 
 **To customize the sounds:**
-- Place your own `startup.wav` in the `sounds/` directory
+- Place your `psx.wav` in the project root (`Audio_Player/psx.wav`)
 - Or edit `play-startup-sound.sh` and `play-connection-sound.sh` to change the tones
 - Adjust volume in the scripts (default is 25-30% for subtle feedback)
 
@@ -199,7 +199,7 @@ When a device connects via AirPlay or Bluetooth, you'll hear a subtle ascending 
 
 ### CamillaDSP Configuration
 
-Edit `sense_music/camilla.yml` to customize:
+Edit `sense_music/camilla-lowlatency.yml` to customize:
 - Sample rate and buffer size
 - EQ bands (10-band parametric EQ)
 - Limiter settings
@@ -262,14 +262,10 @@ This sets:
 - Configures USB audio for low latency
 
 ### Low Latency Mode
-For lower audio latency (higher CPU usage), use the alternative config:
+The packaged CamillaDSP service already uses the low-latency config:
 ```bash
-# Edit the service to use low-latency config
-systemctl --user stop camilladsp.service
-# Change config in ~/.config/systemd/user/camilladsp.service
-# from: camilla.yml to: camilla-lowlatency.yml
 systemctl --user daemon-reload
-systemctl --user start camilladsp.service
+systemctl --user restart camilladsp.service
 ```
 
 ### Bluetooth Connection Sounds
@@ -330,8 +326,8 @@ crontab -l | grep health-check
 2. Verify camilla_sink exists: `pactl list sinks | grep camilla`
 3. Check USB Audio CODEC is detected: `aplay -l | grep "USB Audio CODEC"`
 4. Verify loopback is active: `pactl list modules | grep module-loopback`
-5. Check CamillaDSP logs: `camilladsp sense_music/camilla.yml -v`
-6. Verify playback device in camilla.yml matches your hardware (currently set to `hw:1,0` for USB Audio CODEC)
+5. Check CamillaDSP logs: `camilladsp sense_music/camilla-lowlatency.yml -v`
+6. Verify playback device in camilla-lowlatency.yml matches your hardware (currently set to `hw:1,0` for USB Audio CODEC)
 
 ### Sense HAT Not Working
 
@@ -347,7 +343,7 @@ crontab -l | grep health-check
 
 ### High CPU Usage
 
-1. Increase `chunksize` in camilla.yml
+1. Increase `chunksize` in camilla-lowlatency.yml
 2. Reduce sample rate if acceptable
 3. Disable verbose logging
 
@@ -375,7 +371,8 @@ crontab -l | grep health-check
 ├── sense-music.service           # Systemd service for display
 ├── bluetooth-monitor.service     # Bluetooth monitor service
 ├── sense_music/
-│   ├── camilla.yml              # CamillaDSP configuration
+│   ├── camilla-lowlatency.yml   # Default CamillaDSP configuration
+│   ├── camilla.yml              # Standard CamillaDSP configuration
 │   ├── music_display.py         # Main display + visualizer app
 │   └── audio_visualizer.py      # Standalone visualizer
 ├── sounds/                       # Custom sound files (optional)

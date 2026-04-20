@@ -43,7 +43,7 @@ pa =
 
 sessioncontrol =
 {
-    run_this_before_play_begins = "/home/josh/play_chime.sh";
+    run_this_before_play_begins = "/home/josh/Audio_Player/play-startup-sound.sh";
     wait_for_completion = "no";
 };
 EOF

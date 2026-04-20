@@ -11,7 +11,7 @@ USER_ID=$(id -u)
 echo "Installing Audio Player user services for: $USERNAME (UID: $USER_ID)"
 
 # Verify the installation exists
-if [[ ! -f "$HOME/Audio_Player/sense_music/camilla.yml" ]]; then
+if [[ ! -f "$HOME/Audio_Player/sense_music/camilla-lowlatency.yml" ]]; then
     echo "Error: Audio_Player not found at $HOME/Audio_Player"
     echo "Please run this script from your Audio_Player directory"
     exit 1

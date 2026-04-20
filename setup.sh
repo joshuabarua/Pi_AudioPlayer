@@ -140,7 +140,7 @@ else
     exit 1
 fi
 
-if camilladsp sense_music/camilla.yml --check &>/dev/null; then
+if camilladsp sense_music/camilla-lowlatency.yml --check &>/dev/null; then
     echo "✓ CamillaDSP configuration OK"
 else
     echo "⚠ CamillaDSP configuration check had issues (may be due to PulseAudio holding device)"

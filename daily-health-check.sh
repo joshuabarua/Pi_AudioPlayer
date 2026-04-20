@@ -135,7 +135,7 @@ else
 ❌ Music Display (DOWN)"
 fi
 
-if systemctl is-active --quiet shairport-sync 2>/dev/null; then
+if systemctl --user is-active --quiet shairport-sync-user 2>/dev/null; then
     SUMMARY="${SUMMARY}
 ✅ Shairport Sync"
 else

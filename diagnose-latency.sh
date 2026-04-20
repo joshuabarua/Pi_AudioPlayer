@@ -6,9 +6,9 @@ echo "=== Shairport Sync Latency Diagnostic ==="
 echo ""
 
 echo "[1] Shairport Sync Status:"
-if systemctl is-active --quiet shairport-sync; then
+if systemctl --user is-active --quiet shairport-sync-user; then
     echo "  ✓ Running"
-    systemctl status shairport-sync --no-pager -l | grep -E "(Active:|Main PID:)" | sed 's/^/    /'
+    systemctl --user status shairport-sync-user --no-pager -l | grep -E "(Active:|Main PID:)" | sed 's/^/    /'
 else
     echo "  ✗ NOT running"
 fi
@@ -81,7 +81,7 @@ echo "    4. CPU throttling: check temperature"
 echo ""
 
 echo "[9] Recent Shairport Logs (last 20 lines):"
-journalctl -u shairport-sync --no-pager -n 20 2>/dev/null | tail -20 | sed 's/^/    /' || echo "    (no logs available)"
+journalctl --user -u shairport-sync-user --no-pager -n 20 2>/dev/null | tail -20 | sed 's/^/    /' || echo "    (no logs available)"
 echo ""
 
 echo "=== Diagnostic Complete ==="

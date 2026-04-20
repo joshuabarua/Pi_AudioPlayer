@@ -23,6 +23,14 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
+# Check if Shairport Sync is running
+if systemctl --user is-active --quiet shairport-sync-user; then
+    echo "✓ Shairport Sync is running"
+else
+    echo "✗ Shairport Sync is NOT running"
+    ERRORS=$((ERRORS + 1))
+fi
+
 # Check if USB Audio CODEC is accessible
 USB_CARD=$(aplay -l | grep "USB Audio CODEC" | head -1 | awk '{print $2}' | tr -d ':')
 if [[ -n "$USB_CARD" ]]; then

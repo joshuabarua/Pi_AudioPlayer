@@ -347,6 +347,32 @@ crontab -l | grep health-check
 2. Reduce sample rate if acceptable
 3. Disable verbose logging
 
+## Raspberry Pi 3B Performance & Optimization
+
+The system has been specifically tuned for the Raspberry Pi 3B to resolve connectivity delays, audio choppiness, and thermal issues.
+
+### Key Improvements
+
+- **Headless Mode (`--no-display`)**: Disables the Sense HAT LED matrix and high-CPU audio FFT processing. This significantly reduces CPU load and heat, preventing thermal throttling (which occurs at 80°C+ on the Pi 3B).
+- **Stabilized Audio Buffers**:
+  - Increased CamillaDSP `chunksize` to **2048** and `queuelimit` to **8** to prevent ALSA underruns.
+  - Relaxed Shairport Sync latency to **11025 samples** (~0.25s) for better stability on older hardware.
+- **Improved Discovery**: Enabled and configured `avahi-daemon` to ensure the "Jukebox" device is reliably discoverable via mDNS.
+
+### Using Headless Mode
+
+To save CPU and keep the system cool, the `sense-music.service` now runs with the `--no-display` flag by default.
+
+```bash
+# Manual run in headless mode
+./venv/bin/python sense_music/music_display.py --no-display
+```
+
+In this mode:
+- LEDs remain off.
+- Audio is detected via PulseAudio status instead of real-time FFT.
+- Connection sounds and metadata logging still function.
+
 ## File Structure
 
 ```

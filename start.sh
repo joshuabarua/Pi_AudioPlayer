@@ -54,6 +54,11 @@ if [[ ! -f "$VENV_PYTHON" ]]; then
     exit 1
 fi
 
-# Start the music display
+# Start music display only when explicitly enabled.
+if [[ "${ENABLE_SENSE_DISPLAY:-0}" != "1" ]]; then
+    echo "Skipping Music Display/Visualizer (set ENABLE_SENSE_DISPLAY=1 to enable)"
+    exit 0
+fi
+
 echo "Starting Music Display..."
 exec "$VENV_PYTHON" "$SCRIPT_DIR/sense_music/music_display.py" "$@"

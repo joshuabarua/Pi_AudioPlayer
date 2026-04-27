@@ -868,8 +868,9 @@ def draw_levels(display: DisplayController) -> None:
 class MusicDisplayApp:
     """Main application controller."""
 
-    def __init__(self, verbose: bool = False):
+    def __init__(self, verbose: bool = False, no_display: bool = False):
         self.verbose = verbose
+        self.no_display = no_display
         self.reader = MetadataReader(CONFIG.pipe_path)
         self.stream: Optional[sd.InputStream] = None
         self.display = DisplayController()
@@ -890,16 +891,22 @@ class MusicDisplayApp:
 
     def start(self) -> None:
         """Start the application."""
-        LOGGER.info("Starting Music Display + Visualizer")
+        if self.no_display:
+            LOGGER.info("Starting Music Display in HEADLESS mode (no LEDs, no visualizer)")
+        else:
+            LOGGER.info("Starting Music Display + Visualizer")
 
-        self.stream = start_audio_stream()
+        if not self.no_display:
+            self.stream = start_audio_stream()
+        
         self.running = True
 
         # Initial brightness check
-        factor = get_brightness_factor()
-        LOGGER.info(f"Brightness factor: {factor}")
+        if not self.no_display:
+            factor = get_brightness_factor()
+            LOGGER.info(f"Brightness factor: {factor}")
 
-        if self.display.available:
+        if self.display.available and not self.no_display:
             self.display.clear()
 
         self._main_loop()
@@ -911,14 +918,24 @@ class MusicDisplayApp:
         no_audio_shown = False
         consecutive_errors = 0
 
-        LOGGER.info("Entering main loop")
+        # Use a slower check interval in headless mode to save CPU
+        loop_interval = 0.5 if self.no_display else CONFIG.check_interval
+        
+        LOGGER.info(f"Entering main loop (interval: {loop_interval}s)")
 
         try:
             while self.running:
                 try:
                     artist, title, updated_at = self.reader.get_track()
                     now = time.time()
-                    audio_recent = (now - STATE.audio_last_active) < 1.5
+                    
+                    if self.no_display:
+                        # In headless mode, detect audio activity via pactl instead of FFT
+                        app = detect_current_app()
+                        if app != "unknown":
+                            STATE.audio_last_active = now
+                    
+                    audio_recent = (now - STATE.audio_last_active) < (loop_interval * 3)
                     metadata_fresh = updated_at > 0 and (now - updated_at) <= CONFIG.metadata_timeout
 
                     # Track display logic
@@ -937,9 +954,10 @@ class MusicDisplayApp:
                                 self._play_connection_sound()
                                 self.last_connection_sound_time = now
 
-                            show_airplay_icon(self.display)
-                            base_color = CONFIG.get_app_color(detect_current_app())
-                            scroll_text(self.display, current_track, base_color)
+                            if not self.no_display:
+                                show_airplay_icon(self.display)
+                                base_color = CONFIG.get_app_color(detect_current_app())
+                                scroll_text(self.display, current_track, base_color)
 
                             last_shown_track = current_track
                             last_track_display_time = time.time()
@@ -948,17 +966,19 @@ class MusicDisplayApp:
                     # No audio indicator
                     if (not audio_recent) and (now - STATE.audio_last_active) > CONFIG.no_audio_timeout:
                         if not no_audio_shown:
-                            show_no_audio_x(self.display)
-                            time.sleep(0.7)
+                            if not self.no_display:
+                                show_no_audio_x(self.display)
+                                time.sleep(0.7)
                             no_audio_shown = True
                             LOGGER.info("No audio (idle)")
 
                     # Draw visualizer or ambient
-                    if audio_recent:
-                        draw_levels(self.display)
-                        no_audio_shown = False
-                    else:
-                        ambient_step(self.display)
+                    if not self.no_display:
+                        if audio_recent:
+                            draw_levels(self.display)
+                            no_audio_shown = False
+                        else:
+                            ambient_step(self.display)
 
                     consecutive_errors = 0
 
@@ -970,13 +990,13 @@ class MusicDisplayApp:
                         LOGGER.error("Too many consecutive errors, exiting")
                         break
 
-                    # Check if stream died
-                    if self.stream is not None and not STATE.stream_active:
+                    # Check if stream died (only if we are using it)
+                    if not self.no_display and self.stream is not None and not STATE.stream_active:
                         LOGGER.warning("Audio stream died, attempting restart")
                         time.sleep(1)
                         self.stream = start_audio_stream()
 
-                time.sleep(CONFIG.check_interval)
+                time.sleep(loop_interval)
 
         except KeyboardInterrupt:
             LOGGER.info("Received interrupt signal")
@@ -1010,12 +1030,13 @@ def main():
 
     parser = argparse.ArgumentParser(description="Music Display + Visualizer")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
+    parser.add_argument("--no-display", action="store_true", help="Disable LED display and visualizer (saves CPU)")
     args = parser.parse_args()
 
     if args.verbose:
         LOGGER.setLevel(logging.DEBUG)
 
-    app = MusicDisplayApp(verbose=args.verbose)
+    app = MusicDisplayApp(verbose=args.verbose, no_display=args.no_display)
     app.start()
 
 

@@ -43,7 +43,6 @@ pa =
 
 sessioncontrol =
 {
-    run_this_before_play_begins = "/home/josh/Audio_Player/play-startup-sound.sh";
     wait_for_completion = "no";
 };
 EOF
@@ -104,8 +103,8 @@ echo ""
 echo "=== Latency Fix Applied ==="
 echo ""
 echo "Key changes made:"
-echo "  - Shairport latency: 44100 → 11025 samples (~0.25s)"
-echo "  - PulseAudio buffer: 0.15s → 0.05s"
+echo "  - Shairport latency: 44100 → 4410 samples (~0.10s)"
+echo "  - PulseAudio buffer: 0.15s → 0.02s"
 echo "  - CamillaDSP: Using camilla-lowlatency.yml (chunksize 1024)"
 echo "  - PulseAudio fragments: 2 x 4ms"
 echo ""

@@ -45,7 +45,6 @@ pa =
 
 sessioncontrol =
 {
-    run_this_before_play_begins = "/home/josh/Audio_Player/play-startup-sound.sh";
     wait_for_completion = "no";
     allow_session_interruption = "yes";
     session_timeout = 20;
